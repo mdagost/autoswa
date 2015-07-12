@@ -71,6 +71,7 @@ my $outfile_basename=$tmp_dir."reply_".$now.".html";
 my $outfile_name    =">".$outfile_basename;
 
 open OUT_FILE, $outfile_name or die;
+binmode (OUT_FILE, ":encoding(UTF-8)");
 
 #print the page that we get back
 print OUT_FILE $mech->content;
@@ -79,8 +80,10 @@ print OUT_FILE $mech->content;
 close OUT_FILE;
 
 #parse out the boarding number
-my $groupGrepExp  = "egrep -o ".'"/images/checkin/boarding_pass/boarding[A-Z]" '.$outfile_basename." | egrep -o ".'"boarding[A-Z]"'." | egrep -o ".'"[A-Z]"';
-my $numberGrepExp = "egrep -o ".'"/images/checkin/boarding_pass/boarding[0-9]+" '.$outfile_basename." | egrep -o ".'"boarding[0-9]+"'." | egrep -o ".'"[0-9]+"';
+#my $groupGrepExp  = "egrep -o ".'"/images/checkin/boarding_pass/boarding[A-Z]" '.$outfile_basename." | egrep -o ".'"boarding[A-Z]"'." | egrep -o ".'"[A-Z]"';
+#my $numberGrepExp = "egrep -o ".'"/images/checkin/boarding_pass/boarding[0-9]+" '.$outfile_basename." | egrep -o ".'"boarding[0-9]+"'." | egrep -o ".'"[0-9]+"';
+my $groupGrepExp  = "egrep -o ".'"boarding_group.*" '.$outfile_basename." | egrep -o ".'">[A-Z]<"'." | egrep -o ".'"[A-Z]"';
+my $numberGrepExp = "egrep -o ".'"boarding_position.*" '.$outfile_basename." | egrep -o ".'">[0-9]+"'." | egrep -o ".'"[0-9]+"';
 
 #print $groupGrepExp;
 #print $numberGrepExp;
@@ -113,6 +116,7 @@ $mailString = $mailString."\n\n" .
 
 my $mailProg = "/usr/sbin/sendmail";
 open (MAIL,"|$mailProg -t") or print "Can't find email program $mailProg";
+binmode (MAIL, ":encoding(UTF-8)");
 print MAIL $mailString;
 close MAIL;
 
