@@ -70,7 +70,7 @@ my @boardingNumbers     = qx($numberGrepExp);
 
 # now send our email and push notifications
 my $ses = Net::AWS::SES->new(access_key => $aws_access_key,
-			     secret_key => $aws_secret_access_key);
+			     secret_key => $aws_secret_key);
 
 my $subject = 'Your Automatic Southwest Airlines Checkin';
 my $body = "Your Automatic Southwest Airlines Checkin was successful!!  You have been assigned the boarding number ".$boardingGroup[0];
@@ -83,11 +83,11 @@ my $response = $ses->send(From    => $from_email,
 			  Subject => $subject,
 			  Body    => $body);
 
-unless ( $r->is_success ) {
-    printf("Could not deliver the message: " . $r->error_message);
+unless ( $response->is_success ) {
+    printf("Could not deliver the message: " . $response->error_message);
 }
 
-printf("SES email sent successfully. MessageID: %s\n", $r->message_id);
+printf("SES email sent successfully. MessageID: %s\n", $response->message_id);
 
 # send the same thing via a pushbullet notification
 my $pb = WWW::PushBullet->new({apikey => $pb_api_key});
