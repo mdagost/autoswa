@@ -31,11 +31,11 @@ chomp($now);
 
 my $mech = WWW::Mechanize->new();
 
-#go to the Southwest Airlines checking page
+# go to the SWA checking page
 $mech->get( "http://www.southwest.com/flight/retrieveCheckinDoc.html" );
 $mech->success or die $mech->response->status_line;
 
-#select the form, fill in the fields we need, and submit...
+# select the form, fill in the fields we need, and submit...
 $mech->form_number(2);
 $mech->field(confirmationNumber => $confnumber);
 $mech->field(firstName => $firstname);
@@ -52,7 +52,16 @@ if($multiple_checkin==1){
 }
 $mech->click("printDocuments");
 
-#parse out the boarding number for our email
+# open a file to save the returned html to so that we can parse out the boarding info
+my $outfile_basename="/tmp/reply_".$now.".html";
+my $outfile_name    =">".$outfile_basename;
+open OUT_FILE, $outfile_name or die;
+# print the page that we get back
+print OUT_FILE $mech->content;
+# close the outfile
+close OUT_FILE;
+
+# parse out the boarding number for our email
 my $groupGrepExp  = "egrep -o ".'"boarding_group.*" '.$outfile_basename." | egrep -o ".'">[A-Z]<"'." | egrep -o ".'"[A-Z]"';
 my $numberGrepExp = "egrep -o ".'"boarding_position.*" '.$outfile_basename." | egrep -o ".'">[0-9]+"'." | egrep -o ".'"[0-9]+"';
 
@@ -84,4 +93,3 @@ printf("SES email sent successfully. MessageID: %s\n", $r->message_id);
 my $pb = WWW::PushBullet->new({apikey => $pb_api_key});
 $pb->push_note({ title => $subject,
                  body => $body });
-
