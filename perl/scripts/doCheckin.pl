@@ -53,7 +53,7 @@ if($multiple_checkin==1){
 $mech->click("printDocuments");
 
 # open a file to save the returned html to so that we can parse out the boarding info
-my $outfile_basename="/tmp/reply_".$now.".html";
+my $outfile_basename="/app/reply_".$now.".html";
 my $outfile_name    =">".$outfile_basename;
 open OUT_FILE, $outfile_name or die;
 # print the page that we get back
@@ -62,8 +62,10 @@ print OUT_FILE $mech->content;
 close OUT_FILE;
 
 # parse out the boarding number for our email
-my $groupGrepExp  = "egrep -o ".'"boarding_group.*" '.$outfile_basename." | egrep -o ".'">[A-Z]<"'." | egrep -o ".'"[A-Z]"';
-my $numberGrepExp = "egrep -o ".'"boarding_position.*" '.$outfile_basename." | egrep -o ".'">[0-9]+"'." | egrep -o ".'"[0-9]+"';
+# grep '<img class="group' | egrep -o "alt=.*" | egrep -o "[A|B|C]"
+my $groupGrepExp  = "grep '<img class=".'"group'."' ".$outfile_basename.' | egrep -o "alt=.*" | egrep -o "[A|B|C]"';
+# grep '<img class="position' | egrep -o "boarding[0-9]" | egrep -o "[0-9]"
+my $numberGrepExp  = "grep '<img class=".'"position'."' ".$outfile_basename.' | egrep -o "boarding[0-9]" | egrep -o "[0-9]"';
 
 my @boardingGroup       = qx($groupGrepExp);
 my @boardingNumbers     = qx($numberGrepExp);
@@ -76,12 +78,12 @@ my $subject = 'Your Automatic Southwest Airlines Checkin';
 my $body = "Your Automatic Southwest Airlines Checkin was successful!!  You have been assigned the boarding number ".$boardingGroup[0];
 foreach(@boardingNumbers){ $body = $body.$_; }
 $body = $body."\n\n" .
-    "Unfortunately, we've only reserved your spot for you.  You still have to log back into Southwest to print your boarding pass.  Have a safe trip!!\n\n\n\n".$mech->content;
+    "Unfortunately, we've only reserved your spot for you.  You still have to log back into Southwest to print your boarding pass.  Have a safe trip!!\n\n\n\n";
 
 my $response = $ses->send(From    => $from_email,
 			  To      => $to_email,
 			  Subject => $subject,
-			  Body    => $body);
+			  Body    => $body.$mech->content);
 
 unless ( $response->is_success ) {
     printf("Could not deliver the message: " . $response->error_message);
