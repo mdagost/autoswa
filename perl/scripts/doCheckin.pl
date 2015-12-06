@@ -64,11 +64,20 @@ close OUT_FILE;
 # parse out the boarding number for our email
 # grep '<img class="group' | egrep -o "alt=.*" | egrep -o "[A|B|C]"
 my $groupGrepExp  = "grep '<img class=".'"group'."' ".$outfile_basename.' | egrep -o "alt=.*" | egrep -o "[A|B|C]"';
+my $groupGrepExp2  = "grep '<td class=".'"boarding_group'."' ".$outfile_basename.' | egrep -o "[A|B|C]"';
 # grep '<img class="position' | egrep -o "boarding[0-9]" | egrep -o "[0-9]"
 my $numberGrepExp  = "grep '<img class=".'"position'."' ".$outfile_basename.' | egrep -o "boarding[0-9]" | egrep -o "[0-9]"';
+my $numberGrepExp2  = "grep '<td class=".'"boarding_position'."' ".$outfile_basename.' | egrep -o "[0-9]"';
 
 my @boardingGroup       = qx($groupGrepExp);
 my @boardingNumbers     = qx($numberGrepExp);
+my @boardingGroup2       = qx($groupGrepExp2);
+my @boardingNumbers2     = qx($numberGrepExp2);
+
+if(!@boardingGroup){
+    @boardingGroup = @boardingGroup2;
+    @boardingNumbers = @boardingNumbers2;
+}
 
 # now send our email and push notifications
 my $ses = Net::AWS::SES->new(access_key => $aws_access_key,
